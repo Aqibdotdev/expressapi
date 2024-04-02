@@ -2,9 +2,10 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import dayjs from "dayjs";
 import jwt from "jsonwebtoken";
-import { User } from "./models/user";
+import { User } from "./src/models/user.js";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import { Property } from "./src/models/property.js";
 
 const app: Application = express();
 app.use(express.json());
@@ -29,6 +30,9 @@ mongoose
 
 const greet: string = "Jello!";
 
+// use authenticateToken middleware to protect the route except the signup and signin route
+// app.use("/v1/auth/*", authenticateToken);
+
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   res.send(greet);
 });
@@ -38,11 +42,11 @@ app.post("/v1/auth/signup", async (req: Request, res: Response) => {
     const user = req.body; //getting user data from body
 
     const { name, email, password } = user;
-    const checkIfEmailExist = await User.findOne({
+    const emailExists = await User.findOne({
       email: email,
     });
     // console.log(checkIfEmailExist);
-    if (checkIfEmailExist) {
+    if (emailExists) {
       res.status(400).json({ message: "Email already exist" });
       return;
     }
@@ -59,6 +63,9 @@ app.post("/v1/auth/signup", async (req: Request, res: Response) => {
     res.status(200).json({
       message: "User Created.",
       user: newUser,
+      // data: {
+      //   user: newUser
+      // }
     });
   } catch (error: any) {
     console.log(error);
@@ -90,19 +97,81 @@ app.post(
         return res.status(401).json({ message: "Invalid password" });
       }
       // JWT
-      // const jwtToken = jwt.sign(
-      //   {
-      //     _id: checkIfUserExist?._id,
-      //     email: checkIfUserExist?.email,
-      //     name: checkIfUserExist.name,
-      //   },
-      //   process.env.ACCESS_TOKEN_SECRET as any
-      // );
-      res
-        .status(200)
-        .json({ message: "Successfully login" /*jwtToken: jwtToken*/ });
+      const jwtToken = jwt.sign(
+        {
+          _id: checkIfUserExist?._id,
+          email: checkIfUserExist?.email,
+          name: checkIfUserExist.name,
+          exp: Math.floor(Date.now() / 1000) + 60 * 60,
+        },
+        process.env.ACCESS_TOKEN_SECRET as string
+      );
+      res.status(200).json({
+        message: "Successfully login" /*jwtToken: jwtToken*/,
+        token: jwtToken,
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  }
+);
+
+// POST to create Property
+app.post(
+  "/v1/property/create",
+  // authenticateToken,
+  async (req: Request, res: Response) => {
+    // get email from bearer token in header
+    const authHeader = req.headers["authorization"];
+    const token = authHeader?.split(" ")?.[1];
+    const decoded: any = jwt.decode(token as string) || {};
+    const userEmail = decoded.email;
+
+    if (!userEmail)
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Email not found in token" });
+
+    const property = req.body;
+    const { title, description, price } = property;
+
+    console.log({ body: req.body });
+    console.log({ title, description, price, createdBy: userEmail });
+    try {
+      const newProperty = await Property.create({
+        title,
+        description,
+        price,
+        createdBy: userEmail,
+      });
+      res.status(200).json({ message: "Property Created.", data: newProperty });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  }
+);
+
+// GET all properties created by user
+app.get(
+  "/v1/property",
+  // authenticateToken,
+  async (req: Request, res: Response) => {
+    // get email from bearer token in header
+    const authHeader = req.headers["authorization"];
+    const token = authHeader?.split(" ")?.[1];
+    const decoded: any = jwt.decode(token as string) || {};
+    const userEmail = decoded.email;
+
+    if (!userEmail)
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Email not found in token" });
+
+    try {
+      const properties = await Property.find({ createdBy: userEmail });
+      res.status(200).json({ data: properties });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   }
 );
@@ -118,7 +187,7 @@ function authenticateToken(req: Request, res: Response, next: NextFunction) {
     process.env.ACCESS_TOKEN_SECRET as any,
     (error: any, user: any) => {
       if (error) return res.sendStatus(403);
-      req.body = user;
+      // req.body = user;
       console.log(user);
       console.log(req.body);
       next(); //to move on from middleware
@@ -126,4 +195,4 @@ function authenticateToken(req: Request, res: Response, next: NextFunction) {
   );
 }
 // connecting to server
-app.listen(3000, () => console.log("Server is running!"));
+app.listen(3000, () => console.log("Server is running at port: " + 3000));

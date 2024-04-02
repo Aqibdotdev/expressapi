@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const PropertySchema = new mongoose.Schema(
   {
+    createdBy: {
+      type: String,
+      required: true,
+    },
     title: {
       type: String,
       required: true,
@@ -11,11 +15,11 @@ const PropertySchema = new mongoose.Schema(
       required: true,
     },
     price: {
-      type: String,
+      type: Number,
       required: true,
     },
   },
   { timestamps: true }
 );
 
-export const Proterty = mongoose.model("Property", PropertySchema);
+export const Property = mongoose.model("Property", PropertySchema);
