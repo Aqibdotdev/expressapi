@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import jwt from "jsonwebtoken";
 import { User } from "./models/user";
 import dotenv from "dotenv";
+import bcrypt from "bcrypt";
+
 const app: Application = express();
 app.use(express.json());
 dayjs().format();
@@ -44,7 +46,16 @@ app.post("/v1/auth/signup", async (req: Request, res: Response) => {
       res.status(400).json({ message: "Email already exist" });
       return;
     }
-    const newUser = await User.create({ name, email, password });
+    //hashing password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log(hashedPassword);
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+    console.log(password + "  su p");
     res.status(200).json({
       message: "User Created.",
       user: newUser,
@@ -57,44 +68,45 @@ app.post("/v1/auth/signup", async (req: Request, res: Response) => {
 // Signin
 app.post(
   "/v1/auth/signin",
-  authenticateToken,
+  // authenticateToken,
   async (req: Request, res: Response) => {
+    const user = req.body;
+    const { email, password } = user;
+    console.log(password);
     try {
-      const user = req.body;
-      const { email, password } = user;
       const checkIfUserExist = await User.findOne({
         email: email,
       });
-      console.log(checkIfUserExist);
+      console.log(checkIfUserExist + "  a");
       if (!checkIfUserExist) {
-        res.status(404).json({ message: "User does not exist." });
-        return;
+        return res.status(404).json({ message: "User does not exist." });
       }
-      let isPasswordMatched;
-      if (checkIfUserExist) {
-        isPasswordMatched = checkIfUserExist.password === password;
-      }
+      let isPasswordMatched = await bcrypt.compare(
+        password,
+        checkIfUserExist.password
+      );
+      console.log(isPasswordMatched);
       if (!isPasswordMatched) {
-        res.status(400).json({ message: "Invalid password" });
-        return;
+        return res.status(401).json({ message: "Invalid password" });
       }
       // JWT
-      const jwtToken = jwt.sign(
-        {
-          _id: checkIfUserExist?._id,
-          email: checkIfUserExist?.email,
-          name: checkIfUserExist.name,
-        },
-        process.env.ACCESS_TOKEN_SECRET as any
-      );
+      // const jwtToken = jwt.sign(
+      //   {
+      //     _id: checkIfUserExist?._id,
+      //     email: checkIfUserExist?.email,
+      //     name: checkIfUserExist.name,
+      //   },
+      //   process.env.ACCESS_TOKEN_SECRET as any
+      // );
       res
         .status(200)
-        .json({ message: "Successfully login", jwtToken: jwtToken });
+        .json({ message: "Successfully login" /*jwtToken: jwtToken*/ });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
   }
 );
+
 // Authentication Middleware
 function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
@@ -107,7 +119,9 @@ function authenticateToken(req: Request, res: Response, next: NextFunction) {
     (error: any, user: any) => {
       if (error) return res.sendStatus(403);
       req.body = user;
-      next();
+      console.log(user);
+      console.log(req.body);
+      next(); //to move on from middleware
     }
   );
 }
