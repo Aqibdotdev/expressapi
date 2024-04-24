@@ -1,0 +1,68 @@
+### Read
+GET http://localhost:3000/v1/property
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjBiYTE0NDkyOTQyYmE1NGIzZTcwOGMiLCJlbWFpbCI6Imphc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJqYXNvbiIsImlhdCI6MTcxMzQxODg4NH0.diqwRCaf1itEmjs5lgY68ZIg_Mi6faTbTO0EKkSltg0
+
+### Sign In
+POST http://localhost:3000/v1/auth/signin
+Content-Type: application/json
+
+{
+   "email": "mason@gmail.com",
+  "password": "m123456"
+}
+
+### Sign Up
+POST http://localhost:3000/v1/auth/signup
+Content-Type: application/json
+
+{
+  "name": "mason",
+  "email": "mason@gmail.com",
+  "password": "m123456"
+}
+
+### Create
+POST http://localhost:3000/v1/property/create
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjBiYTE0NDkyOTQyYmE1NGIzZTcwOGMiLCJlbWFpbCI6Imphc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJqYXNvbiIsImlhdCI6MTcxMjIyNzM1M30.-gh6HFqned2V0BwYVMd4JhNE42vgxTg6m8GzPK5mlyM
+
+
+{
+  "title": "property mason",
+  "description": "mason description",
+  "price": 1000
+}
+
+### Delete 
+DELETE http://localhost:3000/v1/property/6624f5683c360b0d77b2ce6c
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjEwMGRlMWM0ODBlZWY1MjJkZDBjM2IiLCJlbWFpbCI6Im1hc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJtYXNvbiIsImlhdCI6MTcxMzg3NDQ4M30.VLoMo5ehRtJWY2XyZWpn-SFc-s0o5cld_l1upKBLN1U
+
+
+### Update
+PUT http://localhost:3000/v1/property/update/660e4d60ac6667a446a6b186
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjEwMGRlMWM0ODBlZWY1MjJkZDBjM2IiLCJlbWFpbCI6Im1hc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJtYXNvbiIsImlhdCI6MTcxMzQzMzg5NH0.antEUVn9QUUYz2WNEwGYias6HcGn6W0IDK2yLCw90Uc
+
+{
+  "title": "property mason UPDATED",
+  "description": "mason dddescription (Price Updated)",
+  "price": 5400
+}
+
+### Archive
+PUT http://localhost:3000/v1/property/archive
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjBiYTE0NDkyOTQyYmE1NGIzZTcwOGMiLCJlbWFpbCI6Imphc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJqYXNvbiIsImlhdCI6MTcxMzc4MjY0Nn0.hNgJsn1kxMIIdMPyAdB_Gi6cO0GmsrOhFY5zfX0CDs4
+
+{
+  "_id": "660e4d60ac6667a446a6b186"
+}
+
+### Read all properties
+GET http://localhost:3000/v1/property/all?minPrice=100&maxPrice=10000&pageSize=2&pageNum=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjEwMGRlMWM0ODBlZWY1MjJkZDBjM2IiLCJlbWFpbCI6Im1hc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJtYXNvbiIsImlhdCI6MTcxMzg3NDQ4M30.VLoMo5ehRtJWY2XyZWpn-SFc-s0o5cld_l1upKBLN1U
+
+
+### Read 1 property by id 
+GET http://localhost:3000/v1/property/6624fc473c360b0d77b2ce6f
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjBjZGY1ZWQ4ZDJiMWQzZWY4OWZlNjgiLCJlbWFpbCI6ImRhc29uQGdtYWlsLmNvbSIsIm5hbWUiOiJkYXNvbiIsImlhdCI6MTcxMzcwMTI5N30.bQrZXeUOVxHs6wpYzHv2XhFqHtluefCPdPG9Xy-07HE
