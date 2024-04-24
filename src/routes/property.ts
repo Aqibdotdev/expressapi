@@ -181,6 +181,72 @@ router.put("/update/:id", async (req: any, res) => {
   res.status(200).json(updatedProperty);
 });
 
+// Delete
+router.delete("/:id", async (req: any, res) => {
+  try {
+    const id = req.params.id;
+
+    const propertyFromDB = await Property.findById(id);
+    const propertyCreatedBy = propertyFromDB?.createdBy;
+
+    console.log(
+      "Created by from Token: ",
+      req.createdBy,
+      "Created by from DB: ",
+      propertyCreatedBy
+    );
+    if (propertyCreatedBy) {
+      if (propertyCreatedBy !== req.createdBy) {
+        res.status(401).json("You are not authorized to delete this property");
+        return;
+      }
+    }
+
+    const data = await Property.findByIdAndDelete(id);
+    console.log(data + " data");
+
+    if (data) {
+      res
+        .status(200)
+        .json(`Document createdBy ${data?.createdBy} has been delated.`);
+    } else {
+      res.status(401).json("Document not found!");
+    }
+    // Deleting from Redis
+    // const redisKeyToDelete = `property-${id}-${propertyCreatedBy}`;
+
+    // redisClient.del(redisKeyToDelete, (err: any, result: any) => {
+    //   if (err) {
+    //     console.log(err);
+    //   } else {
+    //     if (result === 1) {
+    //       console.log(`Redis Key ${redisKeyToDelete} deleted `);
+    //     } else {
+    //       console.log(`Redis Key ${redisKeyToDelete} not found`);
+    //     }
+    //   }
+    // });
+    // Another way of deleting redis keys using pattern matching
+    const constantValue = "property-";
+    const wildcardPattern = "*";
+
+    redisClient.keys(
+      constantValue + wildcardPattern,
+      (err: any, keys: any[]) => {
+        if (err) throw err;
+
+        keys.forEach((key: any) => {
+          redisClient.del(key);
+          console.log(key);
+        });
+      }
+    );
+    // / / / / / / / / /
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 //Archive
 router.put("/archive", async (req: any, res) => {
   try {
